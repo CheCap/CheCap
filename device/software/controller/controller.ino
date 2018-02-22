@@ -4,11 +4,15 @@
 const char ssid[] = "ESP32_wifi"; // SSID
 const char pass[] = "esp32pass";  // password
 const int localPort = 10000;      // ポート番号(pythonのポート番号に合わせる)
+const int remotePort = 10001;
 
 const IPAddress ip(192, 168, 200, 200);       // IPアドレス(pythonのIPアドレスに合わせる)
+const IPAddress remoteIP(192,168,200,233);
 const IPAddress subnet(255, 255, 255, 0); // サブネットマスク
 
 WiFiUDP udp;
+
+uint16_t c=0;
 
 void setup() {
   Serial.begin(115200);
@@ -33,4 +37,12 @@ void loop() {
     char c = udp.read();
     Serial.println(c); // UDP通信で来た値を表示
   }
+  if(c>1000){
+    c=0;
+    udp.beginPacket(remoteIP, remotePort);
+    udp.write('D');
+    udp.endPacket();
+  }
+  c++;
+  delay(1);
 }
