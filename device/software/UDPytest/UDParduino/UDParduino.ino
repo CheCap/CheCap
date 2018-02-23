@@ -6,8 +6,8 @@ const char pass[] = "esp32pass";  // password
 const int localPort = 10000;      // ポート番号(pythonのポート番号に合わせる)
 const int remotePort = 10001;
 
-const IPAddress ip(192, 168, 200, 200);       // IPアドレス(pythonのIPアドレスに合わせる)
-const IPAddress remoteIP(192,168,200,233);
+const IPAddress ip(192, 168, 200, 232);       // IPアドレス(pythonのIPアドレスに合わせる)
+const IPAddress remoteIP(192,168,200,233);  //上のと連番じゃないとdhcp環境で動かない
 const IPAddress subnet(255, 255, 255, 0); // サブネットマスク
 
 WiFiUDP udp;

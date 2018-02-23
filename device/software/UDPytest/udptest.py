@@ -5,12 +5,12 @@ import time
 from contextlib import closing
 
 def main():
-    host = '192.168.200.200' # IPアドレス
+    host = '192.168.200.232' # esp32のIPアドレス
     port = 10000 # ポート番号
     port2=10001
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     #with closing(sock):
-    sock.bind(('192.168.200.233',port2))
+    sock.bind(('192.168.200.233',port2))#esp32のと連番でないとdhcp環境で動かない
     while True:
         message = 'A'.encode('utf-8') # 送る文字列(ここでは「A」という文字列を送っている)
         #print(message)
