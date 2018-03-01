@@ -38,6 +38,7 @@ namespace UdpReceiverUniRx {
 		private static UdpClient myClient;
 		private bool isAppQuitting;
 		public IObservable<UdpState> _udpSequence;
+		TextMesh Box;
 
 		void Awake()
 		{
@@ -65,10 +66,22 @@ namespace UdpReceiverUniRx {
 				observer.OnCompleted ();
 				return null;
 				//return Disposable.Empty;
-			});
-				//.SubscribeOn(Scheduler.ThreadPool)
-				//.Publish()
-				//.RefCount();
+			})
+				.SubscribeOn(Scheduler.ThreadPool)
+				.Publish()
+				.RefCount();
+		}
+
+		void Start () {
+			Box = GetComponent<TextMesh> ();
+
+			_udpSequence
+				.ObserveOnMainThread()
+				.Subscribe(x =>{
+					print(x.UdpMsg);
+					Box.text=x.UdpMsg;
+				})
+				.AddTo(this);
 		}
 
 		void OnApplicationQuit()
