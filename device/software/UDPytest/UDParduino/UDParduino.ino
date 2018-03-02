@@ -10,6 +10,8 @@ const IPAddress ip(192, 168, 200, 232);       // IPアドレス(pythonのIPア�
 const IPAddress remoteIP(192,168,200,233);  //上のと連番じゃないとdhcp環境で動かない
 const IPAddress subnet(255, 255, 255, 0); // サブネットマスク
 
+uint8_t udpTx[255];
+
 WiFiUDP udp;
 
 uint16_t c=0;
@@ -37,11 +39,15 @@ void loop() {
     char c = udp.read();
     Serial.println(c); // UDP通信で来た値を表示
   }
-  if(c>1000){
-    c=0;
+  if(c<36000){
     udp.beginPacket(remoteIP, remotePort);
-    udp.write('D');
+    udpTx[0]=c/100;
+    udpTx[1]=c/10;
+    udpTx[2]=c/2;
+    udp.write(udpTx,3);
     udp.endPacket();
+  }else{
+    c=0;
   }
   c++;
   delay(1);
