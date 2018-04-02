@@ -1,9 +1,10 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include "Encode.h"
 
 #define CONDEBUG    //つながれたLEDでPCとの接続をデバッグする
 #define LED 23
-
+#define UBUFF 18
 
 
 
@@ -18,11 +19,11 @@ const IPAddress subnet(255, 255, 255, 0); // サブネットマスク
 
 WiFiUDP udp;
 
-uint8_t udpTx[255];
-uint8_t uartBuff[18];//開始の0x00を除く終了の0x00までのデータを格納したい(4Byte*4+Checksum+0x00)
+long quat[4];//UARTで受信したデータをデコードしてlong型のクォータニオンにしたデータ
+uint8_t uartBuff[UBUFF];//UARTで受信したデータ
 uint8_t pBuff=0;
-uint16_t checksum=0;
-long quat[4];
+uint8_t pflag =0;
+int8_t numofdata=0;
 
 void beginUDP(){
 #ifdef CONDEBUG
@@ -39,52 +40,48 @@ void beginUDP(){
   
 }
 
+void transmitUDP(long* txdata, uint8_t sizeofdata){
+  udp.beginPacket(remoteIP, remotePort);
+  if(sizeofdata>0){
+    for(uint8_t i=0; i<sizeofdata; i++)
+      udp.write(txdata[i]);
+  }else{
+    udp.print("ERR");
+    udp.print(numofdata);
+  }
+  udp.endPacket();
+}
+
 void checkUART(){
+  uint8_t dedata[UBUFF];        //受信したデータをデコードしたデータ
   while(Serial.available() > 0){
-    uartBuff[pBuff]=Serial.read();
-    checksum+=uartBuff[pBuff];
-    if(pBuff>=17){  
-      udp.beginPacket(remoteIP, remotePort);
-      udpTx[0]=quat[0];
-      udpTx[1]=quat[1];
-      udpTx[2]=quat[2];
-      udpTx[3]=quat[3];
-      udp.write(uartBuff,18);//udp.print(Serial.available());
-      udp.endPacket();
-      pBuff=0;
-      continue;
-    }
-    /*if(pBuff == 17){
-      if(uartBuff[pBuff] == 0x00){      //終了バイト
-        pBuff = 0;
-        if(uartBuff[16] != (checksum&0xff)){   //誤り検出
-          
-          quat[0]='M';
-          quat[1]='I';
-          quat[2]='S';
-          quat[3]='S';
-          return;
-        }else{
-          for(uint8_t i=0; i<4; i++){
-            quat[i] = (uartBuff[i*4]<<(8*3))|(uartBuff[i*4+1]<<(8*2))|(uartBuff[i*4+2]<<(8*1))|(uartBuff[i*4+3]);
-          }
-        }
-      }else{                            //オーバーフロー
-        pBuff = 0;
-        checksum = 0;          
-        quat[0]='O';
-        quat[1]='V';
-        quat[2]='E';
-        quat[3]='R';
-        return;
+    switch(pflag){
+    case 0:
+      uartBuff[0]=Serial.read();
+      if(uartBuff[0] == START){
+        pflag=1;
+        pBuff=1;
       }
-    } else if(uartBuff[pBuff] == 0x00){ //開始バイト
-      pBuff = 0;
-      checksum = 0;
-      uartBuff[pBuff] = 0x00;
-      return;
-    }*/
-    pBuff++;
+      break;
+    case 1:
+      uartBuff[pBuff] = Serial.read();
+      if(uartBuff[pBuff] == START && uartBuff[pBuff-1] != ESC){
+        numofdata=decodeData(uartBuff,pBuff,dedata);
+        for(uint8_t i=0; i<4; i++)
+          byteToLong(&dedata[i*4],&quat[i]);
+        
+        transmitUDP(quat,4);
+        uartBuff[0] = START;
+        pflag = 1;
+        pBuff = 0;
+      }
+      pBuff++;
+      if(pBuff>=UBUFF){
+        pBuff = 0;
+        pflag = 0;
+      }
+      break;
+    }
   }
 
 }
@@ -114,11 +111,11 @@ void loop() {
 #endif
  
     udp.beginPacket(remoteIP, remotePort);
-    udpTx[0]=0;
-    udpTx[1]=0;
-    udpTx[2]=0;
-    udpTx[3]=0;
-    udp.write(udpTx,4);
+    quat[0]=0;
+    quat[1]=0;
+    quat[2]=0;
+    quat[3]=0;
+    transmitUDP(quat,4);
     udp.endPacket();
     
     while(WiFi.softAPgetStationNum() > 0){
