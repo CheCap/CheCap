@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\UDP_Thread.cs" />
+     <Compile Include="Assets\UDPQuatTest.cs" />
      <Compile Include="Assets\UdpReceiverRx.cs" />
      <Compile Include="Assets\UDPRotation.cs" />
      <None Include="Assets\Plugins\UniRx\ReadMe.txt" />
