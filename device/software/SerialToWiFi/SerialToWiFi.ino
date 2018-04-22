@@ -6,6 +6,7 @@
 #define LED 23
 #define UBUFF 18
 
+HardwareSerial Serial2(2);
 
 
 const char ssid[] = "ESP32_wifi"; // SSID
@@ -40,11 +41,15 @@ void beginUDP(){
   
 }
 
-void transmitUDP(long* txdata, uint8_t sizeofdata){
+void transmitUDP(/*long*/uint8_t* txdata, uint8_t sizeofdata){
   udp.beginPacket(remoteIP, remotePort);
   if(sizeofdata>0){
-    for(uint8_t i=0; i<sizeofdata; i++)
+    for(uint8_t i=0; i<sizeofdata; i++){
       udp.write(txdata[i]);
+      Serial.print(txdata[i]);
+      Serial.print(",");
+    }
+    Serial.println("");
   }else{
     udp.print("ERR");
     udp.print(numofdata);
@@ -54,23 +59,23 @@ void transmitUDP(long* txdata, uint8_t sizeofdata){
 
 void checkUART(){
   uint8_t dedata[UBUFF];        //受信したデータをデコードしたデータ
-  while(Serial.available() > 0){
+  while(Serial2.available() > 0){
     switch(pflag){
     case 0:
-      uartBuff[0]=Serial.read();
+      uartBuff[0]=Serial2.read();
       if(uartBuff[0] == START){
         pflag=1;
         pBuff=1;
       }
       break;
     case 1:
-      uartBuff[pBuff] = Serial.read();
+      uartBuff[pBuff] = Serial2.read();
       if(uartBuff[pBuff] == START && uartBuff[pBuff-1] != ESC){
         numofdata=decodeData(uartBuff,pBuff,dedata);
-        for(uint8_t i=0; i<4; i++)
-          byteToLong(&dedata[i*4],&quat[i]);
+        //for(uint8_t i=0; i<4; i++)
+        //  byteToLong(&dedata[i*4],&quat[i]);
         
-        transmitUDP(quat,4);
+        transmitUDP(dedata,16);
         uartBuff[0] = START;
         pflag = 1;
         pBuff = 0;
@@ -88,10 +93,10 @@ void checkUART(){
 
 void SerialToWiFi(){
   checkUART();
-  //while(Serial.available()>0) Serial.read();
-  /*while(Serial.available() > 0){
-    udpTx[0] = Serial.read();
-    Serial.write(udpTx[0]);
+  //while(Serial2.available()>0) Serial2.read();
+  /*while(Serial2.available() > 0){
+    udpTx[0] = Serial2.read();
+    Serial2.write(udpTx[0]);
   }*/
 
 }
@@ -99,7 +104,8 @@ void SerialToWiFi(){
 
 void setup() {
   delay(100);
-  Serial.begin(9600/*,SERIAL_8O1*/);
+  Serial.begin(9600);
+  Serial2.begin(9600/*,SERIAL_8O1*/);
   beginUDP();
 
 }
@@ -111,11 +117,11 @@ void loop() {
 #endif
  
     udp.beginPacket(remoteIP, remotePort);
-    quat[0]=0;
+    /*quat[0]=0;
     quat[1]=0;
     quat[2]=0;
     quat[3]=0;
-    transmitUDP(quat,4);
+    transmitUDP(quat,4);*/
     udp.endPacket();
     
     while(WiFi.softAPgetStationNum() > 0){

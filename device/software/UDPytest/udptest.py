@@ -22,7 +22,7 @@ def main():
         except socket.error:
           pass
         else:
-          print("rcvd:",str(data[0]),str(data[1]),str(data[2]),str(data[3]))
+          print("rcvd:",str(data[0]),str(data[1]),str(data[2]),str(data[3]),type(data[0]))
           #print("rcvd",data)
     return
 
