@@ -35,7 +35,8 @@ namespace UDPQuatTest{
 		private static UdpClient myClient;
 		private bool isAppQuitting;
 		public IObservable<UdpState> _udpSequence;
-		private long[] quat = new long[]{0,0,0,0};
+		private long[] lquat = new long[]{0,0,0,0};
+		private float[] quat = new float[]{ 0, 0, 0, 0 };
 
 		long[] byteToLong(byte[] input, int sizeofout){
 			long[] output = new long[]{ 0, 0, 0, 0 };
@@ -81,7 +82,9 @@ namespace UDPQuatTest{
 			_udpSequence
 				.ObserveOnMainThread()
 				.Subscribe(x =>{
-					quat = byteToLong (x.UdpMsg,4);
+					lquat = byteToLong (x.UdpMsg,4);
+					for(int i=0; i<4; i++)
+						quat[i]=lquat[i]/1073741824f;
 					Debug.Log (string.Format ("{0},{1},{2},{3}", quat[0],quat[1],quat[2],quat[3]));
 					//transform.rotation = Quaternion.AngleAxis (90,new Vector3(x.UdpMsg[0],x.UdpMsg[1],x.UdpMsg[2]));
 					transform.rotation = new Quaternion (quat[0],quat[1],quat[2],quat[3]);
