@@ -3,6 +3,7 @@ from __future__ import print_function
 import socket
 import time
 from contextlib import closing
+import sys
 
 def main():
     host = '192.168.200.232' # esp32‚ÌIPƒAƒhƒŒƒX
@@ -17,11 +18,12 @@ def main():
         sock.sendto(message, (host, port))
         #time.sleep(1)
         try:
-          data=sock.recvfrom(1024)
+          data,adr=sock.recvfrom(1024)
         except socket.error:
           pass
         else:
-          print("rcvd:", data)
+          print("rcvd:",str(data[0]),str(data[1]),str(data[2]),str(data[3]),type(data[0]))
+          #print("rcvd",data)
     return
 
 if __name__ == '__main__':
