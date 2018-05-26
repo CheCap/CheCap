@@ -44,10 +44,10 @@ void loop() {
     digitalWrite(led,LOW);
 		//return;
   }
-  lmympu.lq[0]=305419896;
-  lmympu.lq[1]=305419896;
-  lmympu.lq[2]=305419896;
-  lmympu.lq[3]=305419896;
+  //lmympu.lq[0]=1;
+  //lmympu.lq[1]=2;
+  //lmympu.lq[2]=3;
+  //lmympu.lq[3]=0;
     
  for(uint8_t i=0; i<4; i++){
   longToByte(lmympu.lq[i],&plaindata[i*4]);

@@ -58,13 +58,13 @@ int8_t decodeData(uint8_t* endata, uint8_t size, uint8_t* dedata){
 }
 
 
-void longToByte(long input, uint8_t* output){
+void longToByte(int32_t input, uint8_t* output){
   output[0] = (uint8_t)((input&0xff000000)>>24);
   output[1] = (uint8_t)((input&0x00ff0000)>>16);
   output[2] = (uint8_t)((input&0x0000ff00)>>8);
   output[3] = (uint8_t)(input&0x000000ff);
 }
 
-void byteToLong(uint8_t* input, long* output){
+void byteToLong(uint8_t* input, int32_t* output){
   *output = (((long)input[0])<<24) | (((long)input[1])<<16) | (((long)input[2])<<8) | (((long)input[3]));
 }

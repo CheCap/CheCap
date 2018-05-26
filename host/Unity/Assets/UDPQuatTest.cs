@@ -45,6 +45,13 @@ namespace UDPQuatTest{
 			return output;
 		}
 
+		float LPF(float newdata, float postdata){
+			float i = 0.1f;
+			return newdata * i + postdata * (1 - i);
+		}
+
+
+
 		void Awake()
 		{
 			Debug.Log ("Awake");
@@ -83,9 +90,11 @@ namespace UDPQuatTest{
 				.ObserveOnMainThread()
 				.Subscribe(x =>{
 					lquat = byteToLong (x.UdpMsg,4);
+
+					
 					for(int i=0; i<4; i++)
-						quat[i]=lquat[i]/1073741824f;
-					Debug.Log (string.Format ("{0},{1},{2},{3}", quat[0],quat[1],quat[2],quat[3]));
+						quat[i]= LPF(lquat[i]/1073741824f,quat[i]);
+					Debug.Log (string.Format ("{0:X},{1:X},{2:X},{3:X}", lquat[0],lquat[1],lquat[2],lquat[3]));
 					//transform.rotation = Quaternion.AngleAxis (90,new Vector3(x.UdpMsg[0],x.UdpMsg[1],x.UdpMsg[2]));
 					transform.rotation = new Quaternion (quat[0],quat[1],quat[2],quat[3]);
 				})

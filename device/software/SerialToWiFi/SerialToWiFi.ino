@@ -1,6 +1,16 @@
+#include <OSCBoards.h>
+#include <OSCBundle.h>
+#include <OSCData.h>
+#include <OSCMatch.h>
+#include <OSCMessage.h>
+#include <OSCTiming.h>
+#include <SLIPEncodedSerial.h>
+#include <SLIPEncodedUSBSerial.h>
+
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include "Encode.h"
+
 
 #define CONDEBUG    //つながれたLEDでPCとの接続をデバッグする
 #define LED 23
@@ -20,7 +30,8 @@ const IPAddress subnet(255, 255, 255, 0); // サブネットマスク
 
 WiFiUDP udp;
 
-long quat[4];//UARTで受信したデータをデコードしてlong型のクォータニオンにしたデータ
+int32_t quat[4];//UARTで受信したデータをデコードしてint32_t型のクォータニオンにしたデータ
+float fquat[4];
 uint8_t uartBuff[UBUFF];//UARTで受信したデータ
 uint8_t pBuff=0;
 uint8_t pflag =0;
@@ -41,7 +52,7 @@ void beginUDP(){
   
 }
 
-void transmitUDP(/*long*/uint8_t* txdata, uint8_t sizeofdata){
+void transmitUDP(/*int32_t*/uint8_t* txdata, uint8_t sizeofdata){
   udp.beginPacket(remoteIP, remotePort);
   if(sizeofdata>0){
     for(uint8_t i=0; i<sizeofdata; i++){
@@ -57,7 +68,9 @@ void transmitUDP(/*long*/uint8_t* txdata, uint8_t sizeofdata){
   udp.endPacket();
 }
 
-void checkUART(){
+void SerialToWiFi(){
+  OSCBundle HipBundle;
+  
   uint8_t dedata[UBUFF];        //受信したデータをデコードしたデータ
   while(Serial2.available() > 0){
     switch(pflag){
@@ -72,10 +85,19 @@ void checkUART(){
       uartBuff[pBuff] = Serial2.read();
       if(uartBuff[pBuff] == START && uartBuff[pBuff-1] != ESC){
         numofdata=decodeData(uartBuff,pBuff,dedata);
-        //for(uint8_t i=0; i<4; i++)
-        //  byteToLong(&dedata[i*4],&quat[i]);
+        for(uint8_t i=0; i<4; i++)
+          byteToLong(&dedata[i*4],&quat[i]);
+        for(uint8_t i=0; i<4; i++)
+          fquat[i] = quat[i]/(1073741824.f);
+
+        HipBundle.add("/hip").add(fquat[0]).add(fquat[1]).add(fquat[2]).add(fquat[3]);
+        //transmitUDP(dedata,16);
+
+        udp.beginPacket(remoteIP, remotePort);
+        HipBundle.send(udp);
+        udp.endPacket();
+        HipBundle.empty();
         
-        transmitUDP(dedata,16);
         uartBuff[0] = START;
         pflag = 1;
         pBuff = 0;
@@ -88,16 +110,6 @@ void checkUART(){
       break;
     }
   }
-
-}
-
-void SerialToWiFi(){
-  checkUART();
-  //while(Serial2.available()>0) Serial2.read();
-  /*while(Serial2.available() > 0){
-    udpTx[0] = Serial2.read();
-    Serial2.write(udpTx[0]);
-  }*/
 
 }
 
