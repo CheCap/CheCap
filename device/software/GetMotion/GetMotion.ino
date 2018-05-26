@@ -13,7 +13,7 @@ int ret;
 void setup() {
     pinMode(led,OUTPUT);
     Wire.begin();
-    Serial.begin(9600/*,SERIAL_8O1*/);
+    Serial.begin(115200/*,SERIAL_8O1*/);
     ret = mympu_open(200);
 	
 }

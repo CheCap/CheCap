@@ -117,7 +117,7 @@ void SerialToWiFi(){
 void setup() {
   delay(100);
   Serial.begin(9600);
-  Serial2.begin(9600/*,SERIAL_8O1*/);
+  Serial2.begin(115200/*,SERIAL_8O1*/);
   beginUDP();
 
 }
